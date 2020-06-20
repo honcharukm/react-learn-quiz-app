@@ -6,7 +6,8 @@ import classes from './Quiz.module.css';
 
 class Quiz extends Component {
     state = {
-        isFinished: true,
+        results: {},
+        isFinished: false,
         activeQuestion: 0,
         answerState: null,
         quiz: [
@@ -45,9 +46,16 @@ class Quiz extends Component {
         }
 
         const question = this.state.quiz[this.state.activeQuestion];
+        const results = this.state.results;
+
         if (question.rightAnswerId === answerId) {
+            if(!results[this.state.activeQuestion]) {
+                results[this.state.activeQuestion] = 'success';
+            }
+
             this.setState({
-                answerState: {[answerId] : 'success'}
+                answerState: {[answerId] : 'success'},
+                results
             });
 
             const timeout = window.setTimeout(() => {
@@ -63,16 +71,28 @@ class Quiz extends Component {
                 }
 
                 window.clearTimeout(timeout);
-            }, 1000)
+            }, 300)
         } else {
+            results[this.state.activeQuestion] = 'error';
+
             this.setState({
-                answerState: {[answerId] : 'error'}
+                answerState: {[answerId] : 'error'},
+                results
             });
         }
     }
 
     isQuizFinished () {
         return this.state.activeQuestion + 1 === this.state.quiz.length;
+    }
+
+    handlerRetry = () => {
+        this.setState({
+            results: {},
+            isFinished: false,
+            activeQuestion: 0,
+            answerState: null,
+        });
     }
 
     render () {
@@ -83,7 +103,11 @@ class Quiz extends Component {
 
                     {
                         this.state.isFinished
-                        ? <FinishedQuiz />
+                        ? <FinishedQuiz
+                                results={ this.state.results }
+                                quiz={ this.state.quiz }
+                                onRetry={ this.handlerRetry }
+                            />
                         : <ActiveQuiz
                                 answers={ this.state.quiz[this.state.activeQuestion].answers }
                                 question={ this.state.quiz[this.state.activeQuestion].question }
